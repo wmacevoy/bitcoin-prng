@@ -1,0 +1,24 @@
+LIBSODIUM_CURL ?= curl
+LIBSODIUM_UNAME_M := $(shell uname -m)
+LIBSODIUM_UNAME_S := $(shell uname -s)
+LIBSODIUM_OS_ARCH := $(LIBSODIUM_UNAME_S)-$(LIBSODIUM_UNAME_M)
+LIBSODIUM_VERSION := 1.0.18
+LIBSODIUM_DIR := lib/$(LIBSODIUM_OS_ARCH)/libsodium-$(LIBSODIUM_VERSION)
+LIBSODIUM_TAR := lib/libsodium-$(LIBSODIUM_VERSION).tar.gz
+LIBSODIUM_LIB := $(LIBSODIUM_DIR)/lib/libsodium.a
+LIBSODIUM_INC := $(LIBSODIUM_DIR)/include
+
+.phony: libsodium
+libsodium: $(LIBSODIUM_LIB)
+
+lib:
+	mkdir -p lib
+	touch lib
+
+$(LIBSODIUM_TAR): lib
+	test -f "$@" || mkdir -p $$(dirname "$@") && $(GOOGLE_TEST_CURL) -L -o "$@" https://download.libsodium.org/libsodium/releases/libsodium-$(LIBSODIUM_VERSION).tar.gz && touch "$@"
+
+$(LIBSODIUM_LIB): $(LIBSODIUM_TAR)
+	mkdir -p $(LIBSODIUM)
+	tar -C $(LIBSODIUM_DIR) --strip-components=1 -xf $(LIBSODIUM_TAR)
+	cd $(LIBSODIUM_DIR) && ./configure --prefix=$(LIBSODIUM_DIR) && $(MAKE) && $(MAKE) install
